@@ -8,7 +8,10 @@ def main():
     vplayer = TelloUI(drone,"./img/")
     
 	# start the Tkinter mainloop
-    vplayer.root.mainloop() 
+    try:
+        vplayer.root.mainloop() 
+    except KeyboardInterrupt:
+        vplayer.onClose()
 
 if __name__ == "__main__":
     main()

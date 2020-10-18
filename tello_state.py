@@ -2,7 +2,7 @@ import socket
 from time import sleep
 import curses
 
-INTERVAL = 0.2
+INTERVAL = 0.1
 
 
 

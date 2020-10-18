@@ -5,7 +5,7 @@ from Tkinter import Toplevel, Scale
 import threading
 import datetime
 import cv2
-import os
+import os, sys
 import time
 import platform
 
@@ -76,7 +76,7 @@ class TelloUI:
             # start the thread that get GUI image and drwa skeleton 
             time.sleep(0.5)
             self.sending_command_thread.start()
-            while not self.stopEvent.is_set():                
+            while not self.stopEvent.is_set():
                 system = platform.system()
 
             # read the frame for GUI show
@@ -84,19 +84,19 @@ class TelloUI:
                 if self.frame is None or self.frame.size == 0:
                     continue 
             
-            # transfer the format from frame to image         
+            # transfer the format from frame to image
                 image = Image.fromarray(self.frame)
 
             # we found compatibility problem between Tkinter,PIL and Macos,and it will 
             # sometimes result the very long preriod of the "ImageTk.PhotoImage" function,
             # so for Macos,we start a new thread to execute the _updateGUIImage function.
-                if system =="Windows" or system =="Linux":                
+                if system =="Windows" or system =="Linux":
                     self._updateGUIImage(image)
 
                 else:
                     thread_tmp = threading.Thread(target=self._updateGUIImage,args=(image,))
                     thread_tmp.start()
-                    time.sleep(0.03)                                                            
+                    time.sleep(0.03)
         except RuntimeError, e:
             print("[INFO] caught a RuntimeError")
 
@@ -122,15 +122,23 @@ class TelloUI:
         start a while loop that sends 'command' to tello every 5 second
         """    
 
-        while True:
-            self.tello.send_command('command')        
+        while not self.stopEvent.is_set():
+            try:
+                self.tello.send_command('battery?')
+                time.sleep(0.05)
+                if self.tello.response:
+                    print("Battery: %s%%" % (self.tello.response.replace('\r\n', '')))
+            except AttributeError as e:
+                print(e)
+                print('Quitting keep-alive thread')
+                break
             time.sleep(5)
 
     def _setQuitWaitingFlag(self):  
         """
         set the variable as TRUE,it will stop computer waiting for response from tello  
         """       
-        self.quit_waiting_flag = True        
+        self.quit_waiting_flag = True
    
     def openCmdWindow(self):
         """
@@ -357,4 +365,4 @@ class TelloUI:
         self.stopEvent.set()
         del self.tello
         self.root.quit()
-
+        sys.exit(0)
